@@ -22,12 +22,34 @@ async fn main() {
         match listener.accept().await { 
             Ok((stream, _addr)) => {
                 println!("Connected to CLI");
+                tokio::spawn(async move {
+
+                    let mut buffer = [0; 4096]; // 4kb buffer
+                    match stream.read(&mut buffer).await {
+                        Ok(0) => {
+                            println!("CLI Disconnected/Sent no info");
+                        }
+                        Ok(n) => {
+                            println!("Successfully read {n} bytes");
+                            // now need to deserialize with serde
+                            
+                        }
+                        Err(e) => {
+                            eprintln!("Failed to read from stream {}", e);
+                        }
+                    }
+                })
+                
+
             }
+
+            
             Err(e) => { 
                 panic!("Error in connecting to CLI");
             }
         }
 
+       
 
 
 
