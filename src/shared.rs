@@ -18,4 +18,5 @@ pub enum DaemonResponse {
 pub struct NasaResultShort {
     pub title: String,
     pub nasa_id: String,
+    pub media_type: String,
 }
