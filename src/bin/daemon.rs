@@ -20,8 +20,9 @@ async fn main() {
     println!("Successfully bound to socket at {SOCKET_PATH}");
     loop {
         match listener.accept().await { 
-            Ok((stream, _addr)) => {
+            Ok((mut stream, _addr)) => {
                 println!("Connected to CLI");
+                let task_api_key = api_key.clone();
                 tokio::spawn(async move {
 
                     let mut buffer = [0; 4096]; // 4kb buffer
@@ -32,13 +33,31 @@ async fn main() {
                         Ok(n) => {
                             println!("Successfully read {n} bytes");
                             // now need to deserialize with serde
-                            
+                            let cleaned_buffer = &buffer[..n]; // buffer slices up to empty spots
+
+                            match serde_json::from_slice::<DaemonRequest>(cleaned_buffer) { // parses JSON struct of socket data, and attempts to convert to DaemonRequest 
+                                Ok(request) => { // now either Search or Download
+                                    match request {
+                                        DaemonRequest::Search {query} => {
+                                            println!("Searching for {query}");
+                                            search(query, task_api_key).await;
+                                        }
+                                        DaemonRequest::Download {nasa_id} => {
+                                            return; // todo
+                                        }
+                                    }    
+                                }
+                                Err(e) => {
+                                    eprintln!("Error converting socket data to DaemonRequest, with error {}", e);
+                                }
+
+                            }
                         }
                         Err(e) => {
                             eprintln!("Failed to read from stream {}", e);
                         }
                     }
-                })
+                });
                 
 
             }
@@ -58,7 +77,7 @@ async fn main() {
     }
 }
 
-fn search(search_term : String) { // should return dynamic sized array of all terms relating to search_term
+async fn search(search_term : String, api_key : &str) { // should return dynamic sized array of all terms relating to search_term
 
 
 }
