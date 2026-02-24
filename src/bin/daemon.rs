@@ -73,7 +73,7 @@ async fn main() {
                                                     println!("Successfully searched");
                                                 }
                                                 Err(e) => {
-                                                    eprintln!("Error searching for {} with error {}", &query, e);
+                                                    eprintln!("Error searching for {} with error: {}", &query, e);
                                                 }
                                             }
                                         }

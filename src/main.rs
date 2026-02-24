@@ -26,5 +26,35 @@ async fn main() {
             return;
         }
     };
+
+    // connect to Daemon through socket
+    let mut connection = match UnixStream::connect(SOCKET_PATH).await {
+        Ok(connected) => connected,
+        Err(err) => {
+            eprintln!("Error connecting to socket from main: {}", err);
+            return;
+        }
+    };
+
+    let request = DaemonRequest::Search {query : search_term.clone()};
+
+    let serialized_request = match serde_json::to_vec(&request) { // convert request into serialized JSON bytes
+        Ok(ser) => ser,
+        Err(err) => {
+            eprintln!("Error serializing raw request: {}", err);
+            return;
+        }
+
+    };
+    match connection.write_all(&serialized_request).await {
+        Ok(_) => {
+            println!("Searching for {search_term}...");
+        }
+        Err(e) => {
+            eprintln!("Failed to send data to daemon: {}", e);
+            return;
+        }
+    }
+
     
 }
