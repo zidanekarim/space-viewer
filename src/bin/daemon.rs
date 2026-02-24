@@ -112,9 +112,9 @@ async fn search(search_term : &str, api_key : &str) ->  Result<Vec<NasaResultSho
         .query(&[
             ("q", search_term),
             ("media_type", "image,video"),
-            ("api_key", api_key)
         ])
-        .send().await?;
+        .send().await?
+        .error_for_status()?;
         
         let parsed_data: NasaSearchResponse = response.json().await?;
 
