@@ -71,6 +71,27 @@ async fn main() {
                                             match search(&query, &task_api_key).await {
                                                 Ok(search_result) => {
                                                     println!("Successfully searched");
+                                                    let results = DaemonResponse::SearchResults {items: search_result};
+                                                    let serialized_response = match serde_json::to_vec(&results) { // convert request into serialized JSON bytes
+                                                        Ok(ser) => ser,
+                                                        Err(err) => {
+                                                            eprintln!("Error serializing raw request: {}", err);
+                                                            return;
+                                                        }
+
+                                                    };
+                                                    match stream.write_all(&serialized_response).await {
+                                                        Ok(_) => {
+                                                            println!("Printing Results...");
+                                                        }
+                                                        Err(e) => {
+                                                            eprintln!("Failed to send data to CLI: {}", e);
+                                                            return;
+                                                        }
+                                                    }
+
+
+
                                                 }
                                                 Err(e) => {
                                                     eprintln!("Error searching for {} with error: {}", &query, e);
