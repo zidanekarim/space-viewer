@@ -1,7 +1,7 @@
 use inquire::{Text, validator::{StringValidator, Validation}};
 use reqwest::Client;
 use space_viewer::shared::{DaemonRequest, DaemonResponse}; 
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 
 const SOCKET_PATH: &str = "/tmp/space_viewer.sock";
@@ -52,6 +52,31 @@ async fn main() {
         }
         Err(e) => {
             eprintln!("Failed to send data to daemon: {}", e);
+            return;
+        }
+    }
+    let mut response_buffer = Vec::new();
+    match connection.read_to_end(&mut response_buffer).await {
+        Ok(0) => {
+            eprintln!("No search results read");
+            return;
+        }
+        Ok(n)=> {
+            println!("Read {n} bytes!");
+            match serde_json::from_slice::<DaemonResponse>(&response_buffer) {
+                Ok(DaemonResponse::SearchResults {items: results }) => {
+                    println!("Successfully parsed {} NASA results!", results.len());
+                }
+                Ok(_) => {
+                    eprintln!("Received unexpected response type from daemon.");
+                }
+                Err(e) => {
+                    eprintln!("Failed to parse daemon response: {}", e);
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("Error in receving search results, {}", e);
             return;
         }
     }

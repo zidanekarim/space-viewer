@@ -80,7 +80,7 @@ async fn main() {
                                                         }
 
                                                     };
-                                                    match stream.write_all(&serialized_response).await {
+                                                    match stream.write_all(&serialized_response).await { // passes results back to CLI
                                                         Ok(_) => {
                                                             println!("Printing Results...");
                                                         }
